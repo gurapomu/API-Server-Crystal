@@ -5,7 +5,7 @@ require "http/server"
 
 PUSH_ENDPOINT = "https://api.line.me/v2/bot/message/push"
 REPLY_ENDPOINT = "https://api.line.me/v2/bot/message/reply"
-CARD_NAMES_JSON = "./cardnames.json"
+CARD_NAMES_JSON = "../resource/cardnames.json"
 
 def get_handler(request : HTTP::Request)
   puts "get request"
