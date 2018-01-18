@@ -5,7 +5,6 @@ require "http/server"
 
 PUSH_ENDPOINT = "https://api.line.me/v2/bot/message/push"
 REPLY_ENDPOINT = "https://api.line.me/v2/bot/message/reply"
-CARD_NAMES_JSON = "../resource/cardnames.json"
 
 def get_handler(request : HTTP::Request)
   puts "get request"
@@ -32,7 +31,7 @@ def post_handler(request : HTTP::Request, list : Hash)
 end
 
 def nfcpush(idm : String, list : Hash)
-  cardNames = Response::CardNames.from_json(File.read(CARD_NAMES_JSON)).cardNames
+  cardNames = Response::CardNames.from_json(File.read(Params::PATH_TO_CARDNAMES_JSON)).cardNames
   qual = cardNames.select {|c| c.idm == idm}
   text = ""
   if qual.size != 0
@@ -80,7 +79,7 @@ def replyMessage(replyToken : String, message : String, list : Hash)
   if message.includes?("@カイケツ出退勤管理クン")
     list = list.select {|k, v| v == true}
     text = list.size != 0 ? "#{list.size}人がオフィスにいます\n" : "オフィスには誰もいません"
-    cardNames = Response::CardNames.from_json(File.read(CARD_NAMES_JSON)).cardNames
+    cardNames = Response::CardNames.from_json(File.read(Params::PATH_TO_CARDNAMES_JSON)).cardNames
     list.map {|k, v| cardNames.select {|c| c.idm == k}.size != 0 ? cardNames.select {|c| c.idm == k}[0].name : "未登録のユーザー"}.each {|e| text += "#{e} "}
     puts text
     reply = Response::Reply.new(replyToken, [Response::ReplyMessage.new("text").add_text(text)]).to_json
