@@ -57,15 +57,17 @@ def callback(request : HTTP::Request, event : Response::Event, list : Hash)
   message = event.message
   if message.is_a?(Response::Message)
     puts "message event!"
-    if event.source.groupId.is_a?(String)
-      puts "Group ID:#{event.source.groupId}"
+    groupId = event.source.groupId
+    roomId = event.source.roomId
+    if groupId.is_a?(String)
+      puts "Group ID:#{groupId}"
       text = message.text
       replyToken = event.replyToken
       if text.is_a?(String) && replyToken.is_a?(String)
         replyMessage(replyToken, text, list)
       end
-    elsif event.source.roomId.is_a?(String)
-      puts "Room ID:#{event.source.roomId}"
+    elsif roomId.is_a?(String)
+      puts "Room ID:#{roomId}"
     else
       puts "User ID:#{event.source.userId}"
     end
