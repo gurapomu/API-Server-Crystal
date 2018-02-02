@@ -1,6 +1,12 @@
 require "json"
 
 module Response
+  class Toggle
+    JSON.mapping({
+      idm: String
+    })
+  end
+
   class Result
     JSON.mapping({
       events: Array(Event),

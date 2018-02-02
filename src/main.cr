@@ -18,16 +18,36 @@ def post_handler(request : HTTP::Request, list : Hash)
 
   if body.is_a?(IO)
     if request.path == "/nfcpush"
-      return nfcpush(Response::Cardid.from_json(body.gets_to_end).cardid, list)
+      return {nfcpush(Response::Cardid.from_json(body.gets_to_end).cardid, list), ""}
     elsif request.path == "/bot/callback"
       event = Response::Result.from_json(body.gets_to_end).events[0]
-      return callback(request, event, list)
+      return {callback(request, event, list), ""}
+    elsif request.path == "/slack/whoishere"
+      return whoishere(request, list)
+    elsif request.path == "/toggle"
+      idm = Response::Toggle.from_json(body.gets_to_end).idm
+      return toggle(request, idm, list)
     else
-      return 404
+      return {404, ""}
     end
   else
-    return 400
+    return {400, ""}
   end
+end
+
+def toggle(request : HTTP::Request, idm : String, list : Hash)
+  list[idm] = false if !list.has_key?(idm)
+  list[idm] = !list[idm]
+  puts("toggle #{idm}")
+  return {200, ""}
+end
+
+def whoishere(request : HTTP::Request, list : Hash)
+  list = list.select {|k, v| v == true}
+  text = list.size != 0 ? "#{list.size}人がオフィスにいます\n" : "オフィスには誰もいません"
+  cardNames = Response::CardNames.from_json(File.read(Params::PATH_TO_CARDNAMES_JSON)).cardNames
+  list.map {|k, v| cardNames.select {|c| c.idm == k}.size != 0 ? cardNames.select {|c| c.idm == k}[0].name : "未登録のユーザー"}.each {|e| text += "#{e} "}
+  return {200, "{\"text\": \"#{text}\"}"}
 end
 
 def nfcpush(idm : String, list : Hash)
@@ -105,17 +125,19 @@ list = Hash(String, Bool).new
 
 server = HTTP::Server.new(8080) do |context|
   code = Int32.new(0)
+  text = ""
   if context.request.method == "GET"
     code = get_handler(context.request)
   elsif context.request.method == "POST"
-    code = post_handler(context.request, list)
+    set = post_handler(context.request, list)
+    code = set[0]
+    text = set[1]
   end
-
   if code != 200
     context.response.respond_with_error("message", code)
   else
-    context.response.content_type = "text/plain"
-    context.response.print "Hello world, got #{context.request.path}!"
+    context.response.content_type = "application/json"
+    context.response.print(text)
   end
 end
 
