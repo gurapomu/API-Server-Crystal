@@ -50,6 +50,11 @@ def nfcpush(idm : String, list : Hash)
                       "Authorization" => "Bearer {#{Params::ACCESS_TOKEN}}"
                     },
                     body: push)
+  HTTP::Client.post(Params::SLACK_WEBHOOK_URL,
+                    headers: HTTP::Headers{
+                      "Content-Type" => "application/json",
+                    },
+                    body: "{\"text\": \"#{text}\"}")
   return 200
 end
 
