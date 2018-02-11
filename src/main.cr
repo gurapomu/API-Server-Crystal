@@ -6,9 +6,9 @@ require "http/server"
 PUSH_ENDPOINT = "https://api.line.me/v2/bot/message/push"
 REPLY_ENDPOINT = "https://api.line.me/v2/bot/message/reply"
 
-def get_handler(request : HTTP::Request)
+def get_handler(request : HTTP::Request, list : Hash)
   puts "get request"
-  puts request.query
+  reset(request, list) if request.path == "/reset"
   200
 end
 
@@ -33,6 +33,11 @@ def post_handler(request : HTTP::Request, list : Hash)
   else
     return {400, ""}
   end
+end
+
+def reset(request : HTTP::Request, list : Hash)
+  list.clear
+  200
 end
 
 def toggle(request : HTTP::Request, idm : String, list : Hash)
@@ -127,7 +132,7 @@ server = HTTP::Server.new(8080) do |context|
   code = Int32.new(0)
   text = ""
   if context.request.method == "GET"
-    code = get_handler(context.request)
+    code = get_handler(context.request, list)
   elsif context.request.method == "POST"
     set = post_handler(context.request, list)
     code = set[0]
